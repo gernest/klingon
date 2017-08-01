@@ -2,7 +2,10 @@ package main
 
 import (
 	"errors"
+	"flag"
+	"fmt"
 	"io"
+	"log"
 	"strings"
 )
 
@@ -201,6 +204,23 @@ func parse(src string) ([]KAlpha, error) {
 	return tokens, nil
 }
 
-func main() {
+func printHex(src string) {
+	tks, err := parse(src)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, v := range tks {
+		fmt.Printf("0x%X ", v.Hex())
+	}
+	fmt.Println("")
+}
 
+func main() {
+	flag.Parse()
+	if flag.NArg() > 0 {
+		x := strings.Join(flag.Args(), " ")
+		printHex(x)
+	} else {
+		flag.PrintDefaults()
+	}
 }
