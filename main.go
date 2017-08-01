@@ -1,5 +1,11 @@
 package main
 
+import (
+	"errors"
+	"io"
+	"strings"
+)
+
 // KAlpha token for klingon alphabet
 type KAlpha uint
 
@@ -90,6 +96,104 @@ func (k KAlpha) Hex() int {
 	default:
 		return 0
 	}
+}
+
+var errIgnore = errors.New("ignoring input")
+
+func parse(src string) ([]KAlpha, error) {
+	r := strings.NewReader(src)
+	var tokens []KAlpha
+	for {
+		n, _, err := r.ReadRune()
+		if err == io.EOF {
+			break
+		}
+		switch n {
+		case 'a', 'A':
+			tokens = append(tokens, KA)
+		case 'b', 'B':
+			tokens = append(tokens, KB)
+		case 'c':
+			next, _, err := r.ReadRune()
+			if err != nil || next != 'h' {
+				return nil, errIgnore
+			}
+			tokens = append(tokens, KCH)
+		case 'D', 'd':
+			tokens = append(tokens, KD)
+		case 'e', 'E':
+			tokens = append(tokens, KE)
+		case 'g', 'G':
+			next, _, err := r.ReadRune()
+			if err != nil || next != 'h' {
+				return nil, errIgnore
+			}
+			tokens = append(tokens, KGH)
+		case 'H', 'h':
+			tokens = append(tokens, KH)
+		case 'I', 'i':
+			tokens = append(tokens, KI)
+		case 'j', 'J':
+			tokens = append(tokens, KJ)
+		case 'l', 'L':
+			tokens = append(tokens, KL)
+		case 'm', 'M':
+			tokens = append(tokens, KM)
+		case 'n':
+			next, _, err := r.ReadRune()
+			if err != nil {
+				r.UnreadRune()
+				tokens = append(tokens, KN)
+				continue
+			}
+			if next == 'g' {
+				tokens = append(tokens, KNG)
+			} else {
+				tokens = append(tokens, KN)
+			}
+		case 'o', 'O':
+			tokens = append(tokens, KO)
+		case 'p', 'P':
+			tokens = append(tokens, KP)
+		case 'q':
+			tokens = append(tokens, KQ)
+		case 'Q':
+			tokens = append(tokens, KQCap)
+		case 'r', 'R':
+			tokens = append(tokens, KR)
+		case 'S', 's':
+			tokens = append(tokens, KS)
+		case 't':
+			next, _, err := r.ReadRune()
+			if err != nil {
+				r.UnreadRune()
+				tokens = append(tokens, KT)
+				continue
+			}
+			if next == 'l' {
+				next, _, err = r.ReadRune()
+				if err != nil || next != 'h' {
+					return nil, errIgnore
+				}
+				tokens = append(tokens, KTLH)
+			} else {
+				tokens = append(tokens, KT)
+			}
+		case 'u', 'U':
+			tokens = append(tokens, KU)
+		case 'v', 'V':
+			tokens = append(tokens, KV)
+		case 'w', 'W':
+			tokens = append(tokens, KW)
+		case 'y', 'Y':
+			tokens = append(tokens, KY)
+		case '\'':
+			tokens = append(tokens, KQUOTE)
+		default:
+			return nil, errIgnore
+		}
+	}
+	return tokens, nil
 }
 
 func main() {
