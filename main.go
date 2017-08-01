@@ -37,6 +37,7 @@ const (
 	KW                   //w
 	KY                   //y
 	KQUOTE               //'
+	Space
 )
 
 func (k KAlpha) Hex() int {
@@ -93,6 +94,8 @@ func (k KAlpha) Hex() int {
 		return 0xF8E8
 	case KQUOTE:
 		return 0xF8E9
+	case Space:
+		return 0x0020
 	default:
 		return 0
 	}
@@ -189,6 +192,8 @@ func parse(src string) ([]KAlpha, error) {
 			tokens = append(tokens, KY)
 		case '\'':
 			tokens = append(tokens, KQUOTE)
+		case ' ', '\t':
+			tokens = append(tokens, Space)
 		default:
 			return nil, errIgnore
 		}
