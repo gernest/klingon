@@ -1,11 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -220,7 +224,48 @@ func main() {
 	if flag.NArg() > 0 {
 		x := strings.Join(flag.Args(), " ")
 		printHex(x)
+		api(x)
 	} else {
 		flag.PrintDefaults()
+	}
+}
+
+func api(name string) {
+	base := "http://stapi.co/api/v1/rest/character/search"
+	v := make(url.Values)
+	v.Add("name", name)
+	resp, err := http.PostForm(base, v)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	o := make(map[string]interface{})
+	json.Unmarshal(b, &o)
+	if ch, ok := o["characters"]; ok {
+		if cht, ok := ch.([]interface{}); ok && len(cht) > 0 {
+			chv := cht[0].(map[string]interface{})
+
+			nres, err := http.Get(fmt.Sprintf(
+				"http://stapi.co/api/v1/rest/character?uid=%s", chv["uid"].(string),
+			))
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer nres.Body.Close()
+			nb, err := ioutil.ReadAll(nres.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+			co := make(map[string]interface{})
+			json.Unmarshal(nb, &co)
+			chr := co["character"].(map[string]interface{})
+			sp := chr["characterSpecies"].([]interface{})
+			spv := sp[0].(map[string]interface{})
+			fmt.Println(spv["name"])
+		}
 	}
 }
